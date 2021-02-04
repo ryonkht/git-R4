@@ -2,14 +2,14 @@ data {
   int I;            // 観測値の数
   int T;            // 時点の数
   // int S;            // 一周期の時点の数
-  int N;            // 時系列の数
+  // int N;            // 時系列の数
   vector[I] Y;         // 応答変数（観測値）ベクトル
-  vector[T] X1;         // 説明変数
-  vector[T] X2;         // 説明変数
+  // vector[T] X1;         // 説明変数
+  // vector[T] X2;         // 説明変数
   // int<lower=1, upper=S> ST[T]; // 時点の周期番号
   int<lower=1, upper=T> TI[I]; // 観測値の時点番号
-  int<lower=1, upper=N> NI[I]; // 観測値の時系列番号
-  real<lower=0> S_W;
+  // int<lower=1, upper=N> NI[I]; // 観測値の時系列番号
+  real<lower=0> S_SW;
 }
 
 parameters {
@@ -70,7 +70,7 @@ model {
     Y[i] ~ gamma(alpha[TI[i]], lambda); // alphaとlambda
   }
   // 事前分布
-  s_w ~ normal(0,S_W); //0.0005not good
+  s_w ~ normal(0,S_SW); //0.0005not good
   // s_w ~ normal(0,0.003); //0.0005not good
   // s_b1 ~ normal(0,0.1); //0.0005not good
   // s_b2 ~ normal(0,0.1); //0.0005not good
