@@ -24,7 +24,7 @@ parameters {
   // real<lower=0> s_le;       // 水準成分の過程誤差の標準偏差
   // real<lower=0> s_b1;       // 水準成分の過程誤差の標準偏差
   // real<lower=0> s_b2;       // 水準成分の過程誤差の標準偏差
-  // real<lower=0> s_b3;       // 水準成分の過程誤差の標準偏差
+  // real<lower=0> s_b3;       // 
   real<lower=0> lambda;
 }
 
