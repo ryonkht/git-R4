@@ -65,7 +65,7 @@ transformed parameters{
     alpha[t] = lambda * p[t];
   }
   for (tc in 1:TC){
-    alphac[tc] = lambdac[CTC[tc]] * pc[TTC[tc]];
+    alphac[tc] = lambdac[CTC[tc]] * pc[tc];
   }
 }
 
