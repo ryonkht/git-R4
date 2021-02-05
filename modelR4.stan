@@ -18,7 +18,7 @@ parameters {
   vector<lower=0>[TC] pc;       //  現存量の推定値
   real<lower=0> s_w;       // 水準成分の過程誤差の標準偏差
   real<lower=0> lambda;
-  vector<lower=0>[C] lambdac;
+  vector<lower=lambda>[C] lambdac;
 }
 
 transformed parameters{
