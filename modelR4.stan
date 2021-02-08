@@ -41,9 +41,6 @@ transformed parameters{
     p[t] = exp(beta[t]) * b[t];
   }
   for (t in 1:T){
-    p[t] =  b[t];
-  }
-  for (t in 1:T){
     alpha[t] = lambda * p[t];
   }
   for (tc in 1:TC){
