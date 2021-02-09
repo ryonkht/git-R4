@@ -20,9 +20,8 @@ parameters {
   vector[S-1] pe_base;       // 周期成分の推定値
   vector<lower=0>[TC] pc;       //  現存量の推定値
   real<lower=0> s_w;       // 水準成分の過程誤差の標準偏差
-  vector<lower=0>[T] lambda;
-  // vector<lower=0>[TC] lambdac;
-  vector<upper=0>[TC] lambdac_raw;
+  real<lower=0> lambda;
+  vector<lower=lambda>[C] lambdac;
 }
 
 transformed parameters{
@@ -31,15 +30,6 @@ transformed parameters{
   vector[T] p;   // 状態の推定値
   vector[T] alpha;  // 形状パラメーター
   vector[TC] alphac;  // 形状パラメーター
-  vector[TC] lambdac;
-  for (tc in 1:TC) {
-    lambdac[tc] = lambda[TTC[tc]] + (lambda[TTC[tc]]*2 - lambda[TTC[tc]]) * exp(lambdac_raw[tc]);
-  }
-  // vector<lower=0>[TC] dlambda;
-  
-  // for (tc in 1:TC) {
-  //   dlambda[tc] = lambdac[tc] - lambda[TTC[tc]];  // 周期成分の遷移
-  // }
   for (s in 1:S-1) {
     pe[s] = pe_base[s];  // 周期成分の遷移
   }
@@ -51,10 +41,13 @@ transformed parameters{
     p[t] = exp(beta[t]) * b[t];
   }
   for (t in 1:T){
-    alpha[t] = lambda[t] * p[t];
+    p[t] =  b[t];
+  }
+  for (t in 1:T){
+    alpha[t] = lambda * p[t];
   }
   for (tc in 1:TC){
-    alphac[tc] = lambdac[tc] * pc[tc];
+    alphac[tc] = lambdac[CTC[tc]] * pc[tc];
   }
 }
 
@@ -63,14 +56,12 @@ model {
     b[t] ~ normal(b[t-1], s_w);  // 現存量の過程誤差の遷移
   }
   for(tc in 1:TC){  // 確率分布に従う観測値
-    pc[tc] ~ gamma(alpha[TTC[tc]], lambda[TTC[tc]]); // alphaとlambda
+    pc[tc] ~ gamma(alpha[TTC[tc]], lambda); // alphaとlambda
   }
   for(i in 1:I){  // 確率分布に従う観測値
-    Y[i] ~ gamma(alphac[TCI[i]], lambdac[TCI[i]]); // alphaとlambda
+    Y[i] ~ gamma(alphac[TCI[i]], lambdac[CI[i]]); // alphaとlambda
   }
-  target += sum(lambdac_raw); // log Jacobian
   // 事前分布
-  b[1] ~ normal(10,1);
   s_w ~ normal(0,S_SW); //0.0005not good
 }
 
@@ -78,7 +69,7 @@ generated quantities {
   vector[I] log_lik;
    
   for (i in 1:I) {
-    log_lik[i] = gamma_lpdf(Y[i] | alphac[TCI[i]], lambdac[TCI[i]]);
+    log_lik[i] = gamma_lpdf(Y[i] | alphac[TCI[i]], lambdac[CI[i]]);
   }
 }
 
