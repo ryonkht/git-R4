@@ -21,7 +21,7 @@ parameters {
   vector<lower=0>[TC] pc;       //  現存量の推定値
   real<lower=0> s_w;       // 水準成分の過程誤差の標準偏差
   real<lower=0> lambda[T];
-  vector<lower=mean(lambda)>[C] lambdac;
+  vector<lower=mean(lambda)>[TC] lambdac;
 }
 
 transformed parameters{
@@ -44,7 +44,7 @@ transformed parameters{
     alpha[t] = lambda[t] * p[t];
   }
   for (tc in 1:TC){
-    alphac[tc] = lambdac[CTC[tc]] * pc[tc];
+    alphac[tc] = lambdac[tc] * pc[tc];
   }
 }
 
@@ -56,10 +56,10 @@ model {
     pc[tc] ~ gamma(alpha[TTC[tc]], lambda[TTC[tc]]); // alphaとlambda
   }
   for(i in 1:I){  // 確率分布に従う観測値
-    Y[i] ~ gamma(alphac[TCI[i]], lambdac[CI[i]]); // alphaとlambda
+    Y[i] ~ gamma(alphac[TCI[i]], lambdac[TCI[i]]); // alphaとlambda
   }
   // 事前分布
-  b[1] ~ normal(5,1);
+  b[1] ~ normal(10,1);
   s_w ~ normal(0,S_SW); //0.0005not good
 }
 
@@ -67,7 +67,7 @@ generated quantities {
   vector[I] log_lik;
    
   for (i in 1:I) {
-    log_lik[i] = gamma_lpdf(Y[i] | alphac[TCI[i]], lambdac[CI[i]]);
+    log_lik[i] = gamma_lpdf(Y[i] | alphac[TCI[i]], lambdac[TCI[i]]);
   }
 }
 
