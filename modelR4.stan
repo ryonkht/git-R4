@@ -20,8 +20,8 @@ parameters {
   vector[S-1] pe_base;       // 周期成分の推定値
   vector<lower=0>[TC] pc;       //  現存量の推定値
   real<lower=0> s_w;       // 水準成分の過程誤差の標準偏差
-  real<lower=0> lambda;
-  vector<lower=lambda>[C] lambdac;
+  real<lower=0> lambda[T];
+  vector<lower=mean(lambda)>[C] lambdac;
 }
 
 transformed parameters{
@@ -41,7 +41,7 @@ transformed parameters{
     p[t] = exp(beta[t]) * b[t];
   }
   for (t in 1:T){
-    alpha[t] = lambda * p[t];
+    alpha[t] = lambda[t] * p[t];
   }
   for (tc in 1:TC){
     alphac[tc] = lambdac[CTC[tc]] * pc[tc];
@@ -53,12 +53,13 @@ model {
     b[t] ~ normal(b[t-1], s_w);  // 現存量の過程誤差の遷移
   }
   for(tc in 1:TC){  // 確率分布に従う観測値
-    pc[tc] ~ gamma(alpha[TTC[tc]], lambda); // alphaとlambda
+    pc[tc] ~ gamma(alpha[TTC[tc]], lambda[TTC[tc]]); // alphaとlambda
   }
   for(i in 1:I){  // 確率分布に従う観測値
     Y[i] ~ gamma(alphac[TCI[i]], lambdac[CI[i]]); // alphaとlambda
   }
   // 事前分布
+  b[1] ~ normal(5,1);
   s_w ~ normal(0,S_SW); //0.0005not good
 }
 
