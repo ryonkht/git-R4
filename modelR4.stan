@@ -22,7 +22,7 @@ parameters {
   real<lower=0> s_w;       // 水準成分の過程誤差の標準偏差
   vector<lower=0>[T] lambda;
   // vector<lower=0>[TC] lambdac;
-  vector<upper=0>[TC] lambdac_raw;
+  vector<lower=0, upper=1>[TC] lambdac_raw;
 }
 
 transformed parameters{
@@ -33,7 +33,7 @@ transformed parameters{
   vector[TC] alphac;  // 形状パラメーター
   vector[TC] lambdac;
   for (tc in 1:TC) {
-    lambdac[tc] = lambda[TTC[tc]] + (lambda[TTC[tc]]*2 - lambda[TTC[tc]]) * exp(lambdac_raw[tc]);
+    lambdac[tc] = lambda[TTC[tc]] + (lambda[TTC[tc]]*10 - lambda[TTC[tc]]) * lambdac_raw[tc];
   }
   // vector<lower=0>[TC] dlambda;
   
@@ -68,7 +68,7 @@ model {
   for(i in 1:I){  // 確率分布に従う観測値
     Y[i] ~ gamma(alphac[TCI[i]], lambdac[TCI[i]]); // alphaとlambda
   }
-  target += sum(lambdac_raw); // log Jacobian
+  // target += sum(lambdac_raw); // log Jacobian
   // 事前分布
   b[1] ~ normal(10,1);
   s_w ~ normal(0,S_SW); //0.0005not good
