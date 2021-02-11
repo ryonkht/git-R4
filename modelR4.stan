@@ -5,6 +5,8 @@ data {
   int C;            // 時点の数
   int TC;            // 時点の数
   vector[I] Y;         // 応答変数（観測値）ベクトル
+  vector[T] X1;         // 応答変数（観測値）ベクトル
+  vector[T] X2;         // 応答変数（観測値）ベクトル
   int<lower=1, upper=T> TI[I]; // 観測値の時点番号
   int<lower=1, upper=C> CI[I]; // 観測値の時点番号
   int<lower=1, upper=TC> TCI[I]; // 観測値の時点番号
@@ -18,6 +20,9 @@ parameters {
   vector<lower=0>[T] b;       //  現存量の推定値
   real le;
   vector[S-1] pe_base;       // 周期成分の推定値
+  vector[T] beta1;       // 周期成分の推定値
+  vector[T] beta2;       // 周期成分の推定値
+  vector[T] beta3;       // 周期成分の推定値
   vector<lower=0>[TC] pc;       //  現存量の推定値
   real<lower=0> s_w;       // 水準成分の過程誤差の標準偏差
   vector<lower=0>[T] lambda;
@@ -27,6 +32,9 @@ parameters {
 
 transformed parameters{
   vector[T] pe;       // 周期成分の推定値
+  vector[T] ex1;       // 周期成分の推定値
+  vector[T] ex2;       // 周期成分の推定値
+  vector[T] ex3;       // 周期成分の推定値
   vector[T] beta;     // 時点ごとの係数
   vector[T] p;   // 状態の推定値
   vector[T] alpha;  // 形状パラメーター
@@ -47,7 +55,10 @@ transformed parameters{
     pe[t] = -sum(pe[(t - 35):(t - 1)]);  // 周期成分の遷移
   }
   for (t in 1:T){
-    beta[t] = le + pe[t];  // 水準＋周期性＋外因性
+    ex1[t] = beta1[t] * X1[t];  // 外因成分
+    ex2[t] = beta2[t] * X2[t];  // 外因成分
+    ex3[t] = beta3[t] * X1[t] * X2[t];  // 外因成分
+    beta[t] = le + pe[t] + ex1[t] + ex2[t] + ex3[t];  // 水準＋周期性＋外因性
     p[t] = exp(beta[t]) * b[t];
   }
   for (t in 1:T){
