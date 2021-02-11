@@ -15,10 +15,12 @@ data {
 }
 
 parameters {
-  vector<lower=0>[T] b;       //  現存量の推定値
+  real<lower=0> b1;
+  vector<lower=0, upper=1>[T] d_r;       //  現存量の推定値
   real le;
   vector[S-1] pe_base;       // 周期成分の推定値
   vector<lower=0>[TC] pc;       //  現存量の推定値
+  real<lower=0> mu;       // 水準成分の過程誤差の標準偏差
   real<lower=0> s_w;       // 水準成分の過程誤差の標準偏差
   vector<lower=0>[T] lambda;
   // vector<lower=0>[TC] lambdac;
@@ -26,6 +28,8 @@ parameters {
 }
 
 transformed parameters{
+  vector[T] b;       //  現存量の推定値
+  vector[T] d;       //  現存量の推定値
   vector[T] pe;       // 周期成分の推定値
   vector[T] beta;     // 時点ごとの係数
   vector[T] p;   // 状態の推定値
@@ -40,6 +44,10 @@ transformed parameters{
   // for (tc in 1:TC) {
   //   dlambda[tc] = lambdac[tc] - lambda[TTC[tc]];  // 周期成分の遷移
   // }
+  b[1] = b1;
+  for (t in 2:T) {
+    b[t] = b[t-1] + p[t-1] - d[t-1];  // 現存量の過程誤差の遷移
+  }
   for (s in 1:S-1) {
     pe[s] = pe_base[s];  // 周期成分の遷移
   }
@@ -47,6 +55,7 @@ transformed parameters{
     pe[t] = -sum(pe[(t - 35):(t - 1)]);  // 周期成分の遷移
   }
   for (t in 1:T){
+    d[t] = b[t] * d_r[t];
     beta[t] = le + pe[t];  // 水準＋周期性＋外因性
     p[t] = exp(beta[t]) * b[t];
   }
@@ -60,7 +69,7 @@ transformed parameters{
 
 model {
   for (t in 2:T) {
-    b[t] ~ normal(b[t-1], s_w);  // 現存量の過程誤差の遷移
+    d_r[t] ~ lognormal(mu, s_w);  // 現存量の過程誤差の遷移
   }
   for(tc in 1:TC){  // 確率分布に従う観測値
     pc[tc] ~ gamma(alpha[TTC[tc]], lambda[TTC[tc]]); // alphaとlambda
@@ -70,7 +79,7 @@ model {
   }
   // target += sum(lambdac_raw); // log Jacobian
   // 事前分布
-  b[1] ~ normal(10,1);
+  b1 ~ normal(10,1);
   s_w ~ normal(0,S_SW); //0.0005not good
 }
 
