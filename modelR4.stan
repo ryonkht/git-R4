@@ -25,6 +25,9 @@ parameters {
   vector[T] beta3;       // 周期成分の推定値
   vector<lower=0>[TC] pc;       //  現存量の推定値
   real<lower=0> s_w;       // 水準成分の過程誤差の標準偏差
+  real<lower=0> s_b1;       // 水準成分の過程誤差の標準偏差
+  real<lower=0> s_b2;       // 水準成分の過程誤差の標準偏差
+  real<lower=0> s_b3;       // 水準成分の過程誤差の標準偏差
   vector<lower=0>[T] lambda;
   // vector<lower=0>[TC] lambdac;
   vector<lower=0, upper=1>[TC] lambdac_raw;
@@ -72,6 +75,9 @@ transformed parameters{
 model {
   for (t in 2:T) {
     b[t] ~ normal(b[t-1], s_w);  // 現存量の過程誤差の遷移
+    beta1[t] ~ normal(beta1[t-1], s_b1);
+    beta2[t] ~ normal(beta2[t-1], s_b2);
+    beta3[t] ~ normal(beta3[t-1], s_b3);
   }
   for(tc in 1:TC){  // 確率分布に従う観測値
     pc[tc] ~ gamma(alpha[TTC[tc]], lambda[TTC[tc]]); // alphaとlambda
