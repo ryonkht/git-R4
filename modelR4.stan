@@ -23,12 +23,12 @@ parameters {
   vector[S-1] pe_base;       // 周期成分の推定値
   vector[S] beta1;       // 周期成分の推定値
   vector[S] beta2;       // 周期成分の推定値
-  vector[S] beta3;       // 周期成分の推定値
+  // vector[S] beta3;       // 周期成分の推定値
   vector<lower=0>[TC] pc;       //  現存量の推定値
   real<lower=0> s_w;       // 水準成分の過程誤差の標準偏差
   real<lower=0> s_b1;       // 水準成分の過程誤差の標準偏差
   real<lower=0> s_b2;       // 水準成分の過程誤差の標準偏差
-  real<lower=0> s_b3;       // 水準成分の過程誤差の標準偏差
+  // real<lower=0> s_b3;       // 水準成分の過程誤差の標準偏差
   vector<lower=0>[T] lambda;
   // vector<lower=0>[TC] lambdac;
   vector<lower=0, upper=1>[TC] lambdac_raw;
@@ -38,7 +38,7 @@ transformed parameters{
   vector[T] pe;       // 周期成分の推定値
   vector[T] ex1;       // 周期成分の推定値
   vector[T] ex2;       // 周期成分の推定値
-  vector[T] ex3;       // 周期成分の推定値
+  // vector[T] ex3;       // 周期成分の推定値
   vector[T] beta;     // 時点ごとの係数
   vector[T] p;   // 状態の推定値
   vector[T] alpha;  // 形状パラメーター
@@ -62,8 +62,8 @@ transformed parameters{
   for (t in 1:T){
     ex1[t] = beta1[ST[t]] * X1[t];  // 外因成分
     ex2[t] = beta2[ST[t]] * X2[t];  // 外因成分
-    ex3[t] = beta3[ST[t]] * X1[t] * X2[t];  // 外因成分
-    beta[t] = le + pe[t] + ex1[t] + ex2[t] + ex3[t];  // 水準＋周期性＋外因性
+    // ex3[t] = beta3[ST[t]] * X1[t] * X2[t];  // 外因成分
+    beta[t] = le + pe[t] + ex1[t] + ex2[t];  // 水準＋周期性＋外因性
     p[t] = exp(beta[t]) * b[t];
   }
   for (t in 1:T){
@@ -81,7 +81,7 @@ model {
   for (s in 2:S) {
     beta1[s] ~ normal(beta1[s-1], s_b1);  // 現存量の過程誤差の遷移
     beta2[s] ~ normal(beta2[s-1], s_b2);  // 現存量の過程誤差の遷移
-    beta3[s] ~ normal(beta3[s-1], s_b3);  // 現存量の過程誤差の遷移
+    // beta3[s] ~ normal(beta3[s-1], s_b3);  // 現存量の過程誤差の遷移
   }
   for(tc in 1:TC){  // 確率分布に従う観測値
     pc[tc] ~ gamma(alpha[TTC[tc]], lambda[TTC[tc]]); // alphaとlambda
@@ -95,7 +95,7 @@ model {
   s_w ~ normal(0,S_SW); //0.0005not good
   s_b1 ~ normal(0,0.1); //0.0005not good
   s_b2 ~ normal(0,0.1); //0.0005not good
-  s_b3 ~ normal(0,0.1); //0.0005not good
+  // s_b3 ~ normal(0,0.1); //0.0005not good
 }
 
 generated quantities {
