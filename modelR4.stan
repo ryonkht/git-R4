@@ -16,9 +16,11 @@ data {
 
 parameters {
   real<lower=0> b1;
-  vector<lower=0>[T] d;       //  現存量の推定値
-  // vector<lower=0, upper=1>[T] d_r;       //  現存量の推定値
+  // vector<lower=0>[T] d;       //  現存量の推定値
+  // vector<lower=0, upper=1>[T] r_d;       //  現存量の推定値
+  vector[T] r_d;       //  現存量の推定値
   real le;
+  real<lower=0> co;
   vector[S-1] pe_base;       // 周期成分の推定値
   vector<lower=0>[TC] pc;       //  現存量の推定値
   // real<lower=0> mu;       // 水準成分の過程誤差の標準偏差
@@ -38,29 +40,36 @@ transformed parameters{
   vector[TC] alphac;  // 形状パラメーター
   vector[TC] lambdac;
   for (tc in 1:TC) {
-    lambdac[tc] = lambda[TTC[tc]] + (lambda[TTC[tc]]*10 - lambda[TTC[tc]]) * lambdac_raw[tc];
+    lambdac[tc] = lambda[TTC[tc]] + (lambda[TTC[tc]]*5 - lambda[TTC[tc]]) * lambdac_raw[tc];
   }
   // vector<lower=0>[TC] dlambda;
   
   // for (tc in 1:TC) {
   //   dlambda[tc] = lambdac[tc] - lambda[TTC[tc]];  // 周期成分の遷移
   // }
-  b[1] = b1;
-  for (t in 2:T) {
-    b[t] = b[t-1] + p[t-1] - d[t-1];  // 現存量の過程誤差の遷移
-   // b[t] = b[t-1] + p[t-1] - d[t-1];  // 現存量の過程誤差の遷移
-  }
   for (s in 1:S-1) {
     pe[s] = pe_base[s];  // 周期成分の遷移
   }
   for (t in S:T) {
     pe[t] = -sum(pe[(t - 35):(t - 1)]);  // 周期成分の遷移
   }
-  for (t in 1:T){
-    // d[t] = b[t] * d_r[t];
+  b[1] = b1;
+  beta[1] = le + pe[1];  // 水準＋周期性＋外因性
+  p[1] = exp(beta[1]) * b[1];
+
+  for (t in 2:T) {
+    // b[t] =  b[t-1] + r_d[t-1];  // 現存量の過程誤差の遷移
+    // b[t] = (1 - exp(r_d[t-1])) * b[t-1] + p[t-1];  // 現存量の過程誤差の遷移
+    b[t] = b[t-1] + p[t-1] - co + r_d[t-1];  // 現存量の過程誤差の遷移
+   // b[t] = b[t-1] + p[t-1] - d[t-1];  // 現存量の過程誤差の遷移
     beta[t] = le + pe[t];  // 水準＋周期性＋外因性
     p[t] = exp(beta[t]) * b[t];
   }
+  // for (t in 1:T){
+  //   // d[t] = b[t] * d_r[t];
+  //   beta[t] = le + pe[t];  // 水準＋周期性＋外因性
+  //   p[t] = exp(beta[t]) * b[t];
+  // }
   for (t in 1:T){
     alpha[t] = lambda[t] * p[t];
   }
@@ -71,7 +80,7 @@ transformed parameters{
 
 model {
   for (t in 1:T) {
-    d[t] ~ normal(0, s_w);  // 現存量の過程誤差の遷移
+    r_d[t] ~ normal(0, s_w);  // 現存量の過程誤差の遷移
   }
   for(tc in 1:TC){  // 確率分布に従う観測値
     pc[tc] ~ gamma(alpha[TTC[tc]], lambda[TTC[tc]]); // alphaとlambda
@@ -81,7 +90,8 @@ model {
   }
   // target += sum(lambdac_raw); // log Jacobian
   // 事前分布
-  // b1 ~ normal(10,1);
+  b1 ~ normal(3,1);
+  co ~ normal(0,0.1);
   s_w ~ normal(0,S_SW); //0.0005not good
 }
 
